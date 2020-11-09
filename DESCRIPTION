@@ -1,7 +1,7 @@
 Package: winch
 Title: Portable Native and Joint Stack Traces
-Version: 0.0.1
-Date: 2020-09-26
+Version: 0.0.5
+Date: 2020-11-03
 Authors@R: 
     c(person(given = "Kirill",
              family = "Müller",
@@ -23,18 +23,19 @@ License: GPL-3
 URL: https://r-prof.github.io/winch/, https://github.com/r-prof/winch
 BugReports: https://github.com/r-prof/winch/issues
 Imports: procmaps (>= 0.0.2)
-Suggests: DBI, knitr, magrittr, purrr, rlang, rmarkdown, RSQLite,
-        testthat, vctrs
+Suggests: DBI, knitr, magrittr, purrr, rlang (>= 0.4.8), rmarkdown,
+        RSQLite, testthat, vctrs
 VignetteBuilder: knitr
 Encoding: UTF-8
+Biarch: yes
 LazyData: true
 RoxygenNote: 7.1.1.9000
 NeedsCompilation: yes
-Packaged: 2020-09-30 09:09:20 UTC; kirill
+Packaged: 2020-11-03 07:04:47 UTC; kirill
 Author: Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>),
   R Consortium [fnd],
   Ian Lance Taylor [aut] (Bundled libbacktrace library),
   Free Software Foundation [cph] (Bundled libbacktrace library)
 Maintainer: Kirill Müller <krlmlr+r@mailbox.org>
 Repository: CRAN
-Date/Publication: 2020-10-05 11:50:02 UTC
+Date/Publication: 2020-11-09 22:40:02 UTC

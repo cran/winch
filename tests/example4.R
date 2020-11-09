@@ -12,8 +12,8 @@ if (winch_available() && requireNamespace("rlang")) {
   options(
     error = rlang::entrace,
     rlang_backtrace_on_error = "full",
-    rlang_trace_use_winch = 1L
+    rlang_trace_use_winch = TRUE
   )
 
-  foo()
+  tryCatch(foo(), error = identity)
 }

@@ -43,7 +43,7 @@ baz <- function() {
 
 tail(foo(), 5)
 
-## -----------------------------------------------------------------------------
+## ----eval = winch::winch_available()------------------------------------------
 baz <- function() {
   winch_trace_back()
 }
@@ -69,7 +69,7 @@ table(trace$pathname)
 #  foo()
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  options(rlang_trace_use_winch = 1L)
+#  options(rlang_trace_use_winch = TRUE)
 #  
 #  baz <- function() {
 #    rlang::trace_back()
@@ -81,7 +81,7 @@ table(trace$pathname)
 #  options(
 #    error = rlang::entrace,
 #    rlang_backtrace_on_error = "full",
-#    rlang_trace_use_winch = 1L
+#    rlang_trace_use_winch = TRUE
 #  )
 #  
 #  vctrs::vec_as_location(quote, 2)

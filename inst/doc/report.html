@@ -14,19 +14,16 @@
 
 <title>Joint stack traces</title>
 
-<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
-// v0.0.1
-// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
-
-document.addEventListener('DOMContentLoaded', function() {
-  const codeList = document.getElementsByClassName("sourceCode");
-  for (var i = 0; i < codeList.length; i++) {
-    var linkList = codeList[i].getElementsByTagName('a');
-    for (var j = 0; j < linkList.length; j++) {
-      if (linkList[j].innerHTML === "") {
-        linkList[j].setAttribute('aria-hidden', 'true');
-      }
-    }
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
   }
 });
 </script>
@@ -34,19 +31,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -66,7 +62,7 @@ pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-le
 div.sourceCode
   {   }
 @media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -319,8 +315,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<p>This document describes the concluding efforts of the “Joint Profiling of Native and R Code” project. It describes two new packages, winch and its helper package procmaps. After a definition of the problem, the packages’ features are described, with an outline of work still to be done. It concludes with a discussion of technical caveats and a connection to the first part of the project. The appendix is a scratch pad for links and other bits of information that don’t fit elsewhere.</p>
-<p>The winch package allows combining native and R stack traces in a controlled way, for now outside of a profiling context. This deviates from the original goal of the project, with good reason: robust combined stack traces are a cornerstone for joint profiling, and useful independently.</p>
+<p>This document describes the final results of the “Joint Profiling of Native and R Code” project. It describes two new packages, <code>winch</code>, and its helper package, <code>procmaps</code>. After a definition of the problem, the packages’ features are described, with an outline of work still to be done. It concludes with a discussion of technical caveats and a connection to the first part of the project. The appendix is a scratch pad for links and other bits of information that don’t fit elsewhere.</p>
+<p>The winch package combines native and R stack traces in a controlled way. For now this is outside of a profiling context. This deviates from the original goal of the project, with good reason: robust combined stack traces are a cornerstone for joint profiling and are useful independent of profiling.</p>
 <div id="stack-traces" class="section level2">
 <h2>Stack traces</h2>
 <p>A <a href="https://en.wikipedia.org/wiki/Stack_trace"><em>stack trace</em></a> is a sequence of code locations that describes the execution path from a program’s main entry point to a specific point of interest. Each entry represents a nested function call.</p>
@@ -329,176 +325,176 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <ol style="list-style-type: decimal">
 <li>In a debugger, to show the user the stack.</li>
 <li>In a profiler, to take a sample of the stack.</li>
-<li>From the program itself (like from a crash handler to show the stack).</li>
+<li>From the program itself (e.g. from a crash handler to show the stack).</li>
 </ol>
 </blockquote>
 <div id="r-code" class="section level3">
 <h3>R code</h3>
 <p>In R, stack traces can be obtained via <code>sys.calls()</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>foo &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb1-2"><a href="#cb1-2"></a>  <span class="kw">bar</span>()</span>
-<span id="cb1-3"><a href="#cb1-3"></a>}</span>
-<span id="cb1-4"><a href="#cb1-4"></a></span>
-<span id="cb1-5"><a href="#cb1-5"></a>bar &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb1-6"><a href="#cb1-6"></a>  <span class="kw">baz</span>()</span>
-<span id="cb1-7"><a href="#cb1-7"></a>}</span>
-<span id="cb1-8"><a href="#cb1-8"></a></span>
-<span id="cb1-9"><a href="#cb1-9"></a>baz &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb1-10"><a href="#cb1-10"></a>  <span class="kw">sys.calls</span>()</span>
-<span id="cb1-11"><a href="#cb1-11"></a>}</span>
-<span id="cb1-12"><a href="#cb1-12"></a></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="kw">tail</span>(<span class="kw">foo</span>(), <span class="dv">3</span>)</span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb1-15"><a href="#cb1-15"></a><span class="co">#&gt; foo()</span></span>
-<span id="cb1-16"><a href="#cb1-16"></a><span class="co">#&gt; </span></span>
-<span id="cb1-17"><a href="#cb1-17"></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a><span class="co">#&gt; bar()</span></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="co">#&gt; </span></span>
-<span id="cb1-20"><a href="#cb1-20"></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb1-21"><a href="#cb1-21"></a><span class="co">#&gt; baz()</span></span></code></pre></div>
-<p>Native code cannot easily be deduced from the stack trace. This is seen when replacing function calls with <code>winch::winch_call()</code>, which simulates a roundtrip from native code into R by calling a function passed as argument from C code. The example becomes a double roundtrip: R → native → R → native → R.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(winch)</span>
-<span id="cb2-2"><a href="#cb2-2"></a></span>
-<span id="cb2-3"><a href="#cb2-3"></a>foo &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb2-4"><a href="#cb2-4"></a>  <span class="kw">winch_call</span>(bar)</span>
-<span id="cb2-5"><a href="#cb2-5"></a>}</span>
-<span id="cb2-6"><a href="#cb2-6"></a></span>
-<span id="cb2-7"><a href="#cb2-7"></a>bar &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb2-8"><a href="#cb2-8"></a>  <span class="kw">winch_call</span>(baz)</span>
-<span id="cb2-9"><a href="#cb2-9"></a>}</span>
-<span id="cb2-10"><a href="#cb2-10"></a></span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="kw">tail</span>(<span class="kw">foo</span>(), <span class="dv">5</span>)</span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt; foo()</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; </span></span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; winch_call(bar)</span></span>
-<span id="cb2-17"><a href="#cb2-17"></a><span class="co">#&gt; </span></span>
-<span id="cb2-18"><a href="#cb2-18"></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#&gt; (function() {</span></span>
-<span id="cb2-20"><a href="#cb2-20"></a><span class="co">#&gt;   winch_call(baz)</span></span>
-<span id="cb2-21"><a href="#cb2-21"></a><span class="co">#&gt; })()</span></span>
-<span id="cb2-22"><a href="#cb2-22"></a><span class="co">#&gt; </span></span>
-<span id="cb2-23"><a href="#cb2-23"></a><span class="co">#&gt; [[4]]</span></span>
-<span id="cb2-24"><a href="#cb2-24"></a><span class="co">#&gt; winch_call(baz)</span></span>
-<span id="cb2-25"><a href="#cb2-25"></a><span class="co">#&gt; </span></span>
-<span id="cb2-26"><a href="#cb2-26"></a><span class="co">#&gt; [[5]]</span></span>
-<span id="cb2-27"><a href="#cb2-27"></a><span class="co">#&gt; (function() {</span></span>
-<span id="cb2-28"><a href="#cb2-28"></a><span class="co">#&gt;   sys.calls()</span></span>
-<span id="cb2-29"><a href="#cb2-29"></a><span class="co">#&gt; })()</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>foo <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bar</span>()</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>bar <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">baz</span>()</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>baz <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sys.calls</span>()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(<span class="fu">foo</span>(), <span class="dv">3</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; foo()</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; bar()</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; baz()</span></span></code></pre></div>
+<p>Native code cannot easily be deduced from the stack trace. This is seen when replacing function calls with <code>winch::winch_call()</code>, which simulates a round-trip from native code into R by calling a function passed as argument from C code. The example becomes a double round-trip: R → native → R → native → R.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(winch)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>foo <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">winch_call</span>(bar)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>bar <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">winch_call</span>(baz)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(<span class="fu">foo</span>(), <span class="dv">5</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; foo()</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; winch_call(bar)</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (function() {</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   winch_call(baz)</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; })()</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[4]]</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; winch_call(baz)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[5]]</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; (function() {</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   sys.calls()</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; })()</span></span></code></pre></div>
 <p>A bit of guesswork is required here: we can inspect the bodies of the functions in the call stack to check for calls to <code>.Call()</code>, <code>.External()</code> or <code>.External2()</code>. In our example the candidates are located at indexes 2 and 4:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>baz &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb3-2"><a href="#cb3-2"></a>  funs &lt;-<span class="st"> </span>winch<span class="op">:::</span><span class="kw">sys_functions</span>()</span>
-<span id="cb3-3"><a href="#cb3-3"></a>  <span class="kw">lapply</span>(funs, body)</span>
-<span id="cb3-4"><a href="#cb3-4"></a>}</span>
-<span id="cb3-5"><a href="#cb3-5"></a></span>
-<span id="cb3-6"><a href="#cb3-6"></a><span class="kw">tail</span>(<span class="kw">foo</span>(), <span class="dv">5</span>)</span>
-<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; UseMethod(&quot;tail&quot;)</span></span>
-<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt; </span></span>
-<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt; {</span></span>
-<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt;     winch_call(bar)</span></span>
-<span id="cb3-13"><a href="#cb3-13"></a><span class="co">#&gt; }</span></span>
-<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt; </span></span>
-<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt; {</span></span>
-<span id="cb3-17"><a href="#cb3-17"></a><span class="co">#&gt;     .Call(winch_c_call, fun, env)</span></span>
-<span id="cb3-18"><a href="#cb3-18"></a><span class="co">#&gt; }</span></span>
-<span id="cb3-19"><a href="#cb3-19"></a><span class="co">#&gt; </span></span>
-<span id="cb3-20"><a href="#cb3-20"></a><span class="co">#&gt; [[4]]</span></span>
-<span id="cb3-21"><a href="#cb3-21"></a><span class="co">#&gt; {</span></span>
-<span id="cb3-22"><a href="#cb3-22"></a><span class="co">#&gt;     winch_call(baz)</span></span>
-<span id="cb3-23"><a href="#cb3-23"></a><span class="co">#&gt; }</span></span>
-<span id="cb3-24"><a href="#cb3-24"></a><span class="co">#&gt; </span></span>
-<span id="cb3-25"><a href="#cb3-25"></a><span class="co">#&gt; [[5]]</span></span>
-<span id="cb3-26"><a href="#cb3-26"></a><span class="co">#&gt; {</span></span>
-<span id="cb3-27"><a href="#cb3-27"></a><span class="co">#&gt;     .Call(winch_c_call, fun, env)</span></span>
-<span id="cb3-28"><a href="#cb3-28"></a><span class="co">#&gt; }</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>baz <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  funs <span class="ot">&lt;-</span> winch<span class="sc">:::</span><span class="fu">sys_functions</span>()</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(funs, body)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span>(<span class="fu">foo</span>(), <span class="dv">5</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; UseMethod(&quot;tail&quot;)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; {</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     winch_call(bar)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; }</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; {</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     .Call(winch_c_call, fun, env)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; }</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[4]]</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; {</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     winch_call(baz)</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; }</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[5]]</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; {</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     .Call(winch_c_call, fun, env)</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; }</span></span></code></pre></div>
 <p>It would be much more accurate if the information was available directly in the stack trace. This would require changes to base R.</p>
 </div>
 <div id="native-code" class="section level3">
 <h3>Native code</h3>
-<p>R is an interpreted language, it can be expected that it knows how to track the execution state. (It is much more surprising that it allows programs to compute on their own execution state – R has very strong support for <a href="https://en.wikipedia.org/wiki/Reflection_(computer_programming)">reflection</a> indeed.) How do we achieve this for native code? <a href="https://stackoverflow.com/q/8031742/946850">Can an application programmatically generate its own stack trace?</a></p>
+<p>R is an interpreted language. It can be expected that it knows how to track the execution state. (It is much more surprising that it allows programs to compute on their own execution state – R has very strong support for <a href="https://en.wikipedia.org/wiki/Reflection_(computer_programming)">reflection</a> indeed.) How do we achieve this for native code? <a href="https://stackoverflow.com/q/8031742/946850">Can an application programmatically generate its own stack trace?</a></p>
 <p>For native code, this is provided by the compiler or by specialized libraries. The main result is a sequence of instruction pointers (IP for short): addresses in the process’s memory from where function calls occurred. In some cases, additional information such as the function name is provided. In general, function name, file + line information and even library name must be deduced separately, using other specialized libraries.</p>
-<p>The winch package wraps two libraries (for portability across different OSes) that help obtain IP sequences and function names. This functionality is accessible via <code>winch::winch_trace_back()</code>. For demonstration purposes, this is what the native stack trace looks like for our double roundtrip. Calls into native code can be deduced from the <code>pathname</code> column:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>baz &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="kw">winch_trace_back</span>()</span>
-<span id="cb4-3"><a href="#cb4-3"></a>}</span>
-<span id="cb4-4"><a href="#cb4-4"></a></span>
-<span id="cb4-5"><a href="#cb4-5"></a>trace &lt;-<span class="st"> </span><span class="kw">foo</span>()</span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="kw">nrow</span>(trace)</span>
-<span id="cb4-7"><a href="#cb4-7"></a><span class="co">#&gt; [1] 182</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="kw">head</span>(trace, <span class="dv">25</span>)</span>
-<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#&gt;                  func               ip</span></span>
-<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt; 1            do_Rprof 00007fee1fed5b80</span></span>
-<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt; 2             Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt; 3             Rf_eval 00007fee1feed170</span></span>
-<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt; 4     Rf_applyClosure 00007fee1feee090</span></span>
-<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt; 5             Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt; 6        R_execMethod 00007fee1feeee90</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt; 7             Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt; 8             Rf_eval 00007fee1feed170</span></span>
-<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt; 9     Rf_applyClosure 00007fee1feee090</span></span>
-<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; 10            Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt; 11         winch_call 00007fee0e250240</span></span>
-<span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt; 12 Rf_NewFrameConfirm 00007fee1fe9f8a0</span></span>
-<span id="cb4-22"><a href="#cb4-22"></a><span class="co">#&gt; 13           do_Rprof 00007fee1fed5b80</span></span>
-<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt; 14            Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-24"><a href="#cb4-24"></a><span class="co">#&gt; 15            Rf_eval 00007fee1feed170</span></span>
-<span id="cb4-25"><a href="#cb4-25"></a><span class="co">#&gt; 16    Rf_applyClosure 00007fee1feee090</span></span>
-<span id="cb4-26"><a href="#cb4-26"></a><span class="co">#&gt; 17           do_Rprof 00007fee1fed5b80</span></span>
-<span id="cb4-27"><a href="#cb4-27"></a><span class="co">#&gt; 18            Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-28"><a href="#cb4-28"></a><span class="co">#&gt; 19            Rf_eval 00007fee1feed170</span></span>
-<span id="cb4-29"><a href="#cb4-29"></a><span class="co">#&gt; 20    Rf_applyClosure 00007fee1feee090</span></span>
-<span id="cb4-30"><a href="#cb4-30"></a><span class="co">#&gt; 21            Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-31"><a href="#cb4-31"></a><span class="co">#&gt; 22         winch_call 00007fee0e250240</span></span>
-<span id="cb4-32"><a href="#cb4-32"></a><span class="co">#&gt; 23 Rf_NewFrameConfirm 00007fee1fe9f8a0</span></span>
-<span id="cb4-33"><a href="#cb4-33"></a><span class="co">#&gt; 24           do_Rprof 00007fee1fed5b80</span></span>
-<span id="cb4-34"><a href="#cb4-34"></a><span class="co">#&gt; 25            Rf_eval 00007fee1feeb4f0</span></span>
-<span id="cb4-35"><a href="#cb4-35"></a><span class="co">#&gt;                                                 pathname</span></span>
-<span id="cb4-36"><a href="#cb4-36"></a><span class="co">#&gt; 1                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-37"><a href="#cb4-37"></a><span class="co">#&gt; 2                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-38"><a href="#cb4-38"></a><span class="co">#&gt; 3                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-39"><a href="#cb4-39"></a><span class="co">#&gt; 4                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-40"><a href="#cb4-40"></a><span class="co">#&gt; 5                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-41"><a href="#cb4-41"></a><span class="co">#&gt; 6                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-42"><a href="#cb4-42"></a><span class="co">#&gt; 7                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-43"><a href="#cb4-43"></a><span class="co">#&gt; 8                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-44"><a href="#cb4-44"></a><span class="co">#&gt; 9                                 /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-45"><a href="#cb4-45"></a><span class="co">#&gt; 10                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-46"><a href="#cb4-46"></a><span class="co">#&gt; 11 /tmp/RtmpX6ENst/Rinst5d273f468733/winch/libs/winch.so</span></span>
-<span id="cb4-47"><a href="#cb4-47"></a><span class="co">#&gt; 12                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-48"><a href="#cb4-48"></a><span class="co">#&gt; 13                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-49"><a href="#cb4-49"></a><span class="co">#&gt; 14                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-50"><a href="#cb4-50"></a><span class="co">#&gt; 15                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-51"><a href="#cb4-51"></a><span class="co">#&gt; 16                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-52"><a href="#cb4-52"></a><span class="co">#&gt; 17                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-53"><a href="#cb4-53"></a><span class="co">#&gt; 18                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-54"><a href="#cb4-54"></a><span class="co">#&gt; 19                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-55"><a href="#cb4-55"></a><span class="co">#&gt; 20                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-56"><a href="#cb4-56"></a><span class="co">#&gt; 21                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-57"><a href="#cb4-57"></a><span class="co">#&gt; 22 /tmp/RtmpX6ENst/Rinst5d273f468733/winch/libs/winch.so</span></span>
-<span id="cb4-58"><a href="#cb4-58"></a><span class="co">#&gt; 23                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-59"><a href="#cb4-59"></a><span class="co">#&gt; 24                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-60"><a href="#cb4-60"></a><span class="co">#&gt; 25                                /usr/lib/R/lib/libR.so</span></span>
-<span id="cb4-61"><a href="#cb4-61"></a><span class="kw">table</span>(trace<span class="op">$</span>pathname)</span>
-<span id="cb4-62"><a href="#cb4-62"></a><span class="co">#&gt; </span></span>
-<span id="cb4-63"><a href="#cb4-63"></a><span class="co">#&gt;                    /lib/x86_64-linux-gnu/libc-2.27.so </span></span>
-<span id="cb4-64"><a href="#cb4-64"></a><span class="co">#&gt;                                                     1 </span></span>
-<span id="cb4-65"><a href="#cb4-65"></a><span class="co">#&gt; /tmp/RtmpX6ENst/Rinst5d273f468733/winch/libs/winch.so </span></span>
-<span id="cb4-66"><a href="#cb4-66"></a><span class="co">#&gt;                                                     2 </span></span>
-<span id="cb4-67"><a href="#cb4-67"></a><span class="co">#&gt;                                 /usr/lib/R/bin/exec/R </span></span>
-<span id="cb4-68"><a href="#cb4-68"></a><span class="co">#&gt;                                                     2 </span></span>
-<span id="cb4-69"><a href="#cb4-69"></a><span class="co">#&gt;                                /usr/lib/R/lib/libR.so </span></span>
-<span id="cb4-70"><a href="#cb4-70"></a><span class="co">#&gt;                                                   177</span></span></code></pre></div>
-<p><code>winch_trace_back()</code> is a low-level function not intended to be called by the user. It is a corner stone for joint backtraces provided by <code>winch_add_trace_back()</code>, as shown in the next section. For now, <code>winch_trace_back()</code> provides the native function name and the library name on all tested platforms (Linux, macOS, Windows). Information about file + line remains an open issue.</p>
+<p>The winch package wraps two libraries (for portability across different OSes) that help obtain IP sequences and function names. This functionality is accessible via <code>winch::winch_trace_back()</code>. For demonstration purposes, this is what the native stack trace looks like for our double round-trip. Calls into native code can be deduced from the <code>pathname</code> column:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>baz <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">winch_trace_back</span>()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>trace <span class="ot">&lt;-</span> <span class="fu">foo</span>()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(trace)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 182</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(trace, <span class="dv">25</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  func               ip</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1            do_Rprof 00007f236503ec00</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2             Rf_eval 00007f2365054570</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3             Rf_eval 00007f23650561f0</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     Rf_applyClosure 00007f2365057110</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5             Rf_eval 00007f2365054570</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6        R_execMethod 00007f2365057f10</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7             Rf_eval 00007f2365054570</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8             Rf_eval 00007f23650561f0</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9     Rf_applyClosure 00007f2365057110</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10            Rf_eval 00007f2365054570</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11         winch_call 00007f23533c28d0</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 Rf_NewFrameConfirm 00007f2365008920</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13           do_Rprof 00007f236503ec00</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14            Rf_eval 00007f2365054570</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 15            Rf_eval 00007f23650561f0</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 16    Rf_applyClosure 00007f2365057110</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 17           do_Rprof 00007f236503ec00</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 18            Rf_eval 00007f2365054570</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 19            Rf_eval 00007f23650561f0</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20    Rf_applyClosure 00007f2365057110</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 21            Rf_eval 00007f2365054570</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 22         winch_call 00007f23533c28d0</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 23 Rf_NewFrameConfirm 00007f2365008920</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 24           do_Rprof 00007f236503ec00</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 25            Rf_eval 00007f2365054570</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                 pathname</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9                                 /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 /tmp/RtmpAEgSNL/Rinst3e8126947307/winch/libs/winch.so</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 15                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 16                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 17                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 18                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 19                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 21                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 22 /tmp/RtmpAEgSNL/Rinst3e8126947307/winch/libs/winch.so</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 23                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 24                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 25                                /usr/lib/R/lib/libR.so</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(trace<span class="sc">$</span>pathname)</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    /lib/x86_64-linux-gnu/libc-2.27.so </span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                     1 </span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; /tmp/RtmpAEgSNL/Rinst3e8126947307/winch/libs/winch.so </span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                     2 </span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                 /usr/lib/R/bin/exec/R </span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                     2 </span></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                /usr/lib/R/lib/libR.so </span></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                                   177</span></span></code></pre></div>
+<p><code>winch_trace_back()</code> is a low-level function not intended to be called by the user. It is a cornerstone for joint backtraces provided by <code>winch_add_trace_back()</code>, as shown in the next section. For now, <code>winch_trace_back()</code> provides the native function name and the library name on all tested platforms (Linux, macOS, Windows). Information about file + line remains an open issue.</p>
 </div>
 <div id="r-code-native-code" class="section level3">
 <h3>R code + native code</h3>
-<p>R always has been an interface language, with excellent integration of calling into foreign interfaces. R code often calls into specialized native code for speed or to avoid reimplementation in R. Due to this duality, it is helpful to access both kinds of stack trace: R and native.</p>
+<p>R has always been an interface language, with excellent integration of calls into foreign interfaces. R code often calls into specialized native code for speed or to avoid re-implementation in R. Due to this duality, it is helpful to access both kinds of stack trace: R and native.</p>
 <p>These stack traces are not very helpful if taken separately. Native code is hidden from R backtrace, and R code is represented as sequence of function calls in <code>libR.so</code> or equivalent. Fusing these stack traces allows representing the chain of function calls from both domains when R code calls into native code (which then might call back into R).</p>
-<p>The combination of R and native stack traces in winch relies on two prerequisites:</p>
+<p>The combination of R and native stack traces in winch relies on two heuristics:</p>
 <ol style="list-style-type: decimal">
 <li>Calls from R into native code can be detected by searching for special function names in the stack trace: <code>.Call()</code>, <code>.External()</code> or <code>.External2()</code>.</li>
 <li>In the native stack trace, interpreted R code can be distinguished from user-provided native code by checking the name of the shared library for each IP: R code corresponds to IPs pointing to <code>libR.so</code>.</li>
@@ -512,11 +508,11 @@ bar()                libR.so::... (repeated)
 foo()                libR.so::... (repeated)</code></pre>
 <p>Combining stack traces now means pairing corresponding <code>.Call()</code> entries with native traces from other modules than <code>libR.so</code>, denoted by <code>&lt;--&gt;</code> in the above example.</p>
 <p>The winch package implements this on top of <code>rlang::trace_back()</code>, a wrapper around <code>sys.calls()</code> that displays as a tree and creates better output in the presence of lazy evaluation.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>baz &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb6-2"><a href="#cb6-2"></a>  rlang<span class="op">::</span><span class="kw">trace_back</span>()</span>
-<span id="cb6-3"><a href="#cb6-3"></a>}</span>
-<span id="cb6-4"><a href="#cb6-4"></a></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="kw">foo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>baz <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  rlang<span class="sc">::</span><span class="fu">trace_back</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">foo</span>()</span></code></pre></div>
 <pre><code>    █
  1. └─global::foo()
  2.   ├─winch::winch_call(bar)
@@ -524,12 +520,12 @@ foo()                libR.so::... (repeated)</code></pre>
  4.     ├─winch::winch_call(baz)
  5.     └─(function () ... R/call.R:4:2</code></pre>
 <p>The function <code>winch::winch_add_trace_back()</code> enriches an rlang stack trace with relevant parts of the native stack trace, by pairing <code>.Call()</code> and similar entries with native code from outside of <code>libR.so</code>, as described above.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>baz &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb8-2"><a href="#cb8-2"></a>  trace &lt;-<span class="st"> </span>rlang<span class="op">::</span><span class="kw">trace_back</span>()</span>
-<span id="cb8-3"><a href="#cb8-3"></a>  <span class="kw">winch_add_trace_back</span>(trace)</span>
-<span id="cb8-4"><a href="#cb8-4"></a>}</span>
-<span id="cb8-5"><a href="#cb8-5"></a></span>
-<span id="cb8-6"><a href="#cb8-6"></a><span class="kw">foo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>baz <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  trace <span class="ot">&lt;-</span> rlang<span class="sc">::</span><span class="fu">trace_back</span>()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">winch_add_trace_back</span>(trace)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">foo</span>()</span></code></pre></div>
 <pre><code>    █
  1. └─global::foo()
  2.   └─winch::winch_call(bar)
@@ -539,13 +535,13 @@ foo()                libR.so::... (repeated)</code></pre>
  6.           └─`/winch.so`::winch_call()
  7.             └─(function () ... R/call.R:4:2</code></pre>
 <p>Stack traces must be collected at the time that the error occurs, this includes calls to <code>rlang::abort()</code> which already collect a stack trace. The integration is a <a href="https://github.com/r-lib/rlang/pull/1039">small change to rlang</a> that calls <code>winch_add_trace_back()</code> during collection if winch is installed and the <code>rlang_trace_use_winch</code> option is identical to <code>1L</code>. With this option set, manual addition of the native stack trace is no longer necessary.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">options</span>(<span class="dt">rlang_trace_use_winch =</span> 1L)</span>
-<span id="cb10-2"><a href="#cb10-2"></a></span>
-<span id="cb10-3"><a href="#cb10-3"></a>baz &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb10-4"><a href="#cb10-4"></a>  rlang<span class="op">::</span><span class="kw">trace_back</span>()</span>
-<span id="cb10-5"><a href="#cb10-5"></a>}</span>
-<span id="cb10-6"><a href="#cb10-6"></a></span>
-<span id="cb10-7"><a href="#cb10-7"></a><span class="kw">foo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">rlang_trace_use_winch =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>baz <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  rlang<span class="sc">::</span><span class="fu">trace_back</span>()</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">foo</span>()</span></code></pre></div>
 <pre><code>    █
  1. └─global::foo()
  2.   └─winch::winch_call(bar)
@@ -554,14 +550,14 @@ foo()                libR.so::... (repeated)</code></pre>
  5.         └─winch::winch_call(baz)
  6.           └─`/winch.so`::winch_call()
  7.             └─(function () ... R/call.R:4:2</code></pre>
-<p>The vctrs package uses C for performance-critical parts, and often calls back into R for e.g. S3 dispatch or error reporting. The example below triggers an error: native code calls into R for actually throwing the error.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">options</span>(</span>
-<span id="cb12-2"><a href="#cb12-2"></a>  <span class="dt">error =</span> rlang<span class="op">::</span>entrace,</span>
-<span id="cb12-3"><a href="#cb12-3"></a>  <span class="dt">rlang_backtrace_on_error =</span> <span class="st">&quot;full&quot;</span>,</span>
-<span id="cb12-4"><a href="#cb12-4"></a>  <span class="dt">rlang_trace_use_winch =</span> 1L</span>
-<span id="cb12-5"><a href="#cb12-5"></a>)</span>
-<span id="cb12-6"><a href="#cb12-6"></a></span>
-<span id="cb12-7"><a href="#cb12-7"></a>vctrs<span class="op">::</span><span class="kw">vec_as_location</span>(quote, <span class="dv">2</span>)</span></code></pre></div>
+<p>The <code>vctrs</code> package uses C for performance-critical parts, and often calls back into R for e.g. S3 dispatch or error reporting. The example below triggers an error and native code calls into R to throw the error.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">error =</span> rlang<span class="sc">::</span>entrace,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">rlang_backtrace_on_error =</span> <span class="st">&quot;full&quot;</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">rlang_trace_use_winch =</span> <span class="cn">TRUE</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>vctrs<span class="sc">::</span><span class="fu">vec_as_location</span>(quote, <span class="dv">2</span>)</span></code></pre></div>
 <pre><code>Error: Must subset elements with a valid subscript vector.
 ✖ Subscript has the wrong type `function`.
 ℹ It must be logical, numeric, or character.
@@ -587,7 +583,7 @@ Backtrace:
 <li><p>Providing file + line information for stack traces (requires work for macOS)</p></li>
 <li><p>Collect IPs or native stack traces during profiling</p></li>
 </ul>
-<p>For errors thrown from Rcpp code, the stack trace ends at the autogenerated stub, because this is the code that catches the C++ exception. It would be useful if stack trace information would be collected at the point of error, and provided as part of the error condition.</p>
+<p>For errors thrown from Rcpp code, the stack trace ends at the auto-generated stub, because this is the code that catches the C++ exception. It would be useful if stack trace information could be collected at the point of error and provided as part of the error condition.</p>
 </div>
 <div id="technical-details" class="section level2">
 <h2>Technical details</h2>
@@ -598,18 +594,15 @@ Backtrace:
 <p>It’s not surprising that there is no portable “one size fits all” solution. Some but not all options give the function name for each entry, sometimes file + line information is available too. Determining the shared library that provided the code seems to be an entirely separate topic.</p>
 <div id="retrieving-ips" class="section level3">
 <h3>Retrieving IPs</h3>
-<p>I experimented with the following options:</p>
+<p>The following options were experimented with:</p>
 <ol style="list-style-type: decimal">
 <li><p>The libc function <a href="https://www.gnu.org/software/libc/manual/html_node/Backtraces.html"><code>execinfo()</code></a> was a first obvious candidate. It works well enough on mainstream Linux, but not on Windows. Also, function names were not discovered reliably, in particular for optimized code.</p></li>
 <li><p>The libunwind library supports similar functionality and discovers function names more reliably. Unfortunately, it also <a href="https://libunwind-devel.nongnu.narkive.com/ahavTcFa/libunwind-and-windows">does not work on Windows</a>. What’s more, there are <a href="http://lists.llvm.org/pipermail/cfe-dev/2016-September/050650.html">two implementations</a>: the <a href="https://bcain-llvm.readthedocs.io/projects/libunwind/en/latest/">macOS implementation</a>, part of clang, is a newer rewrite of the original <a href="https://www.nongnu.org/libunwind/">non-GNU implementation</a> that is <a href="https://github.com/libunwind/libunwind">available on GitHub</a>.</p></li>
 <li><p>The <a href="https://github.com/ianlancetaylor/libbacktrace">libbacktrace library</a>, part of GCC and also available standalone, with its own tests, seems to give slightly worse results for the detection of function names. On the up side, it is portable, with support for Windows (<a href="https://www.msys2.org/">MSYS2</a>, on which the most recent <a href="https://cran.r-project.org/bin/windows/Rtools/">rtools</a> is based). It also gives file + line information for each stack frame.</p></li>
 </ol>
-<p>Wrapping the libbacktrace library looks like the best option in terms of portability and features. Unfortunately, it currently fails on macOS. Therefore, I settled with a combination of libbacktrace and libunwind, depending on the platform:</p>
+<p>Wrapping the libbacktrace library looks like the best option in terms of portability and features. Unfortunately, it currently fails on macOS. Therefore, a combination of libbacktrace and libunwind is used depending on the platform:</p>
 <ul>
-<li>On Linux, use libunwind, because it gives slightly better results
-<ul>
-<li>Possible to use libbacktrace</li>
-</ul></li>
+<li>On Linux, use libunwind, because it gives slightly better results (it is possible to use libbacktrace)</li>
 <li>On macOS, use libunwind, because libbacktrace doesn’t work in this setting yet</li>
 <li>On Windows, use libbacktrace, because it’s the only option</li>
 <li>Disable on Solaris, neither library works there</li>
@@ -626,15 +619,15 @@ Backtrace:
 <div id="libbacktrace-on-windows" class="section level4">
 <h4>libbacktrace on Windows</h4>
 <ul>
-<li><p>libbacktrace works on mingw64 with gcc patch: <a href="https://github.com/gcc-mirror/gcc/pull/48" class="uri">https://github.com/gcc-mirror/gcc/pull/48</a></p>
+<li>libbacktrace works on mingw64 with gcc patch: <a href="https://github.com/gcc-mirror/gcc/pull/48" class="uri">https://github.com/gcc-mirror/gcc/pull/48</a>
 <ul>
-<li><p>documented in libbacktrace issue: <a href="https://github.com/ianlancetaylor/libbacktrace/issues/43#issuecomment-687858320" class="uri">https://github.com/ianlancetaylor/libbacktrace/issues/43#issuecomment-687858320</a></p></li>
-<li><p>gcc bug reported: <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96948" class="uri">https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96948</a></p></li>
-<li><p>patches by me and by Martin Storsjö: <a href="https://gcc.gnu.org/pipermail/gcc-patches/2020-September/553418.html" class="uri">https://gcc.gnu.org/pipermail/gcc-patches/2020-September/553418.html</a></p></li>
-<li><p>patch submitted to rtools-packages: <a href="https://github.com/r-windows/rtools-packages/pull/148" class="uri">https://github.com/r-windows/rtools-packages/pull/148</a></p></li>
-<li><p>works somewhat if using region addresses, can slightly patch libbacktrace to achieve this with stock gcc: <a href="https://github.com/ianlancetaylor/libbacktrace/pull/54" class="uri">https://github.com/ianlancetaylor/libbacktrace/pull/54</a>, rejected upstream, applied in winch</p></li>
+<li>documented in libbacktrace issue: <a href="https://github.com/ianlancetaylor/libbacktrace/issues/43#issuecomment-687858320">https://github.com/ianlancetaylor/libbacktrace/issues/43#issuecomment-687858320</a></li>
+<li>gcc bug reported: <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96948">https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96948</a></li>
+<li>patches by me and by Martin Storsjö: <a href="https://gcc.gnu.org/pipermail/gcc-patches/2020-September/553418.html">https://gcc.gnu.org/pipermail/gcc-patches/2020-September/553418.html</a></li>
+<li>patch submitted to rtools-packages: <a href="https://github.com/r-windows/rtools-packages/pull/148">https://github.com/r-windows/rtools-packages/pull/148</a></li>
+<li>works somewhat if using region addresses, can slightly patch libbacktrace to achieve this with stock gcc: <a href="https://github.com/ianlancetaylor/libbacktrace/pull/54">https://github.com/ianlancetaylor/libbacktrace/pull/54</a>, rejected upstream, applied in winch</li>
 </ul></li>
-<li><p>almost as good as libunwind when looking up symbol information, observed difference in some <code>libR.so</code> symbols</p>
+<li>almost as good as libunwind when looking up symbol information, observed difference in some <code>libR.so</code> symbols
 <ul>
 <li>no improvement seen with <a href="https://github.com/ianlancetaylor/libbacktrace/pull/38">a pull request</a></li>
 </ul></li>
@@ -643,15 +636,15 @@ Backtrace:
 <div id="options-not-considered" class="section level4">
 <h4>Options not considered</h4>
 <ul>
-<li><p>I haven’t tried <a href="https://www.boost.org/doc/libs/master/boost/stacktrace/detail/collect_unwind.ipp">boost stacktrace</a> yet</p></li>
+<li><p><a href="https://www.boost.org/doc/libs/master/boost/stacktrace/detail/collect_unwind.ipp">boost stacktrace</a> has not been tried yet</p></li>
 <li><p>The <a href="http://stacktrace.sourceforge.net/">stacktrace</a> library is from 2009, was last changed 2013</p></li>
-<li><p>I haven’t considered going a <a href="https://programmer.help/blogs/using-the-_unwind_backtrace-function-to-grab-the-backtrace-of-the-c-c-stack.html">fully native route</a> without library suport, this would amount to rewriting large parts of existing library code.</p></li>
+<li><p>A <a href="https://programmer.help/blogs/using-the-_unwind_backtrace-function-to-grab-the-backtrace-of-the-c-c-stack.html">fully native route</a> has not been considered. Without library support this would amount to rewriting large parts of existing library code.</p></li>
 </ul>
 </div>
 </div>
 <div id="retrieving-module-name" class="section level3">
 <h3>Retrieving module name</h3>
-<p>Perhaps not surprising, mapping IPs to module names also requires platform-specific code. On Linux, the mapping is provided through the <code>/proc/self/maps</code> virtual file, other systems require vastly different approaches. I haven’t found a library dedicated specifically to this problem.</p>
+<p>Perhaps not surprising, mapping IPs to module names also requires platform-specific code. On Linux, the mapping is provided through the <code>/proc/self/maps</code> virtual file. Other systems require vastly different approaches. It appears that there is not a library dedicated specifically to this problem.</p>
 <p>The <a href="https://github.com/gperftools/gperftools">gperftools repository</a> contains relevant code targeting all platforms of interest. I extracted this code in the procmaps package, now on CRAN.</p>
 <p>A first release, version 0.0.1, was flagged due to a too complex <code>./configure</code> script. With further simplification it was possible to avoid configuration entirely. It should be possible to rewrite the relevant code in C to provide a standalone solution that is applicable in a wider context.</p>
 </div>
@@ -661,7 +654,7 @@ Backtrace:
 <p>The libbacktrace library optionally provides file + line information for each entry in the stack trace.</p>
 <p>Unfortunately it currently does not work on macOS:</p>
 <ul>
-<li><p>Its internal tests show “libbacktrace: no debug info in Mach-O executable”, perhaps related to <a href="https://github.com/ianlancetaylor/libbacktrace/issues/53">an issue that also limits usability on Windows</a></p></li>
+<li><p>Its internal tests show “libbacktrace: no debug info in Mach-O executable”, perhaps related to <a href="https://github.com/ianlancetaylor/libbacktrace/issues/53">an issue that also limits usability on Windows</a>.</p></li>
 <li><p>Using libbacktrace in winch gives a segmentation fault.</p></li>
 </ul>
 <p>The gperftools library relies on the <code>addr2line</code> executable for retrieving file + line information (<a href="https://sourceforge.net/p/elftoolchain/code/HEAD/tree/trunk/addr2line/addr2line.c">source</a>, <a href="https://stackoverflow.com/q/11556321/946850">relevant StackOverflow question</a>).</p>
@@ -670,9 +663,9 @@ Backtrace:
 </div>
 <div id="history-jointprof-part-1" class="section level2">
 <h2>History: jointprof part 1</h2>
-<p>The main result of the first part of the project is the jointprof package, which implements a proof of concepts for recording native and R stack traces in parallel, exclusively during profiling. It uses <a href="https://github.com/gperftools/gperftools">the gperftools library</a> to record native stack traces, and daisy chains into the profiling routine provided by R to record R stack traces. A helper package, profile, processes the profiler data created by gperftools.</p>
-<p>This approach works on Linux only. On macOS, a patch is required; Windows is completely unsupported. The approach is a bit brittle, occasionally stack traces could not be matched. Fusion of stack traces for debugging purposes is not possible.</p>
-<p>Will Landau contributed the proffer package to the project, a drop-in replacement to profvis that uses <a href="https://github.com/google/pprof">pprof</a> to visualize profiles.</p>
+<p>The main result of the first part of the project is the <code>jointprof</code> package, which implements a proof of concept for recording native and R stack traces in parallel, exclusively during profiling. It uses <a href="https://github.com/gperftools/gperftools">the gperftools library</a> to record native stack traces, and daisy chains into the profiling routine provided by R to record R stack traces. A helper package, <code>profile</code>, processes the profiler data created by gperftools.</p>
+<p>This approach works on Linux only. On macOS, a patch is required; Windows is completely unsupported. The approach is a bit brittle. Occasionally stack traces could not be matched. Fusion of stack traces for debugging purposes is not possible.</p>
+<p>Will Landau contributed the <code>proffer</code> package to the project, a drop-in replacement to profvis that uses <a href="https://github.com/google/pprof">pprof</a> to visualize profiles.</p>
 </div>
 <div id="appendix" class="section level2">
 <h2>Appendix</h2>
