@@ -1,6 +1,6 @@
-754fde4836a7547f2eb62aecc919a01e *DESCRIPTION
+c8a4b4039948bafa33936b8d59aaaac1 *DESCRIPTION
 348546d081868c82ae6d90537c2cda04 *NAMESPACE
-2e61636f9230c3ef7e6cc4924bc89d99 *NEWS.md
+9e959b88971dfc2091c80f991b0a0752 *NEWS.md
 5f43ef6899e8b821b2b3e3b80345000c *R/add_trace_back.R
 c30a30877ed4cb0c86f3bcf1328023c7 *R/available.R
 221863d03b48a3b43c29204c880c4e56 *R/call.R
@@ -16,7 +16,7 @@ c88245cbd46d37554d8bd99dc1d5684b *README.md
 d21fc0057709eb458f0da82626ebb05c *inst/WORDLIST
 f05c5080322c3e5e6ddbc6a8fb91d334 *inst/doc/report.R
 d62d517fc8c03954ab57463fec58d4b4 *inst/doc/report.Rmd
-46ca9b719aa3f6ccd85d966df883980f *inst/doc/report.html
+a0b7af34c6659d3a6df32d6f295ec881 *inst/doc/report.html
 5db62b9f982171e659ad4ad276dfe9d8 *man/winch-package.Rd
 b24708042d4c5ac546975689b4bbd013 *man/winch_add_trace_back.Rd
 d2c64405a55a0548c7b239e621d6d713 *man/winch_available.Rd
@@ -30,7 +30,7 @@ da405a17e181e80555e1dc00b858fb79 *src/Makevars.in
 8f9dbc7c92a543f29bc0a977f711e043 *src/Makevars.win
 cb48213956397cf16ca2fed3a8e3b7f9 *src/call.c
 96d24c1ea13797a885fefb1eb7c5f8dd *src/configure.sh
-80cc4f62c1cdee10a2f99a85dc6a3df0 *src/configure.win.sh
+f853636cf2e30b44979edae3f3d892e4 *src/configure.win.sh
 5cc7ca1cd862a3f1a41275620d2bcf9e *src/init.c
 641838154e00c71021b4591321873bc6 *src/stop.c
 aaac73a9edbc26842c7f2bbcd9156dbb *src/trace_back.c
@@ -117,7 +117,7 @@ f4312772f3b4c92f0516dcef64f20a97 *tests/example6.R
 b4aa1f84b07a13c2e2d3d4b171be6acd *tests/example7.R
 49f25b5d7edd79b112d7ccc42bcfa028 *tests/example8.R
 c42156ebc050ced75e7d99177f4dd409 *tests/testthat.R
-ca85aa53367e697fb3fe1eb64a4b368a *tests/testthat/test-add_trace_back.R
-75fc512a7b913dad1d404ceb2f691b86 *tests/testthat/test-stop.R
+e1f481f6e73b5f258494011fc3302c44 *tests/testthat/test-add_trace_back.R
+a6cdc562dce21b2f746386801bd224f1 *tests/testthat/test-stop.R
 5ccf937062cfd266e92bc590a7734a23 *tests/testthat/test-trace_back.R
 d62d517fc8c03954ab57463fec58d4b4 *vignettes/report.Rmd
