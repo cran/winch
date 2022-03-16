@@ -1,5 +1,10 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
+# winch 0.0.8 (2022-03-16)
+
+- Fix compatibility with vctrs > 0.3.8.
+
+
 # winch 0.0.7 (2021-10-24)
 
 - Fix compatibility with dev rlang (#50).
