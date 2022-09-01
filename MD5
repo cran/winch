@@ -1,6 +1,6 @@
-9006072cc16658870c1c1c0651f0df35 *DESCRIPTION
+db730f367c508d233667ba9d57842082 *DESCRIPTION
 348546d081868c82ae6d90537c2cda04 *NAMESPACE
-f50127b7a3e752be18c382afcab09eff *NEWS.md
+cc1f17f1871c4ff32bbc0c6366b74698 *NEWS.md
 080a7617a51060110abe695502685457 *R/add_trace_back.R
 c30a30877ed4cb0c86f3bcf1328023c7 *R/available.R
 221863d03b48a3b43c29204c880c4e56 *R/call.R
@@ -10,14 +10,14 @@ b035d17bbb84a75f80c349eadc49682f *R/stop.R
 97bce06a52b9fa2f3978e52be90ad5f4 *R/winch-package.R
 c3a19806730d1f6043dca1cfdc058de3 *R/zzz.R
 919847d978f2cfcf00cd0414f81423cd *README.md
-77668c72bf19b02e9cc54a47997ec934 *build/vignette.rds
+46294b1103216643fb84afde1d31d8bd *build/vignette.rds
 584ed37202455357d0d2b2e8fabdfc6e *configure
 5fd67e5b578b6b59041922f694acbb48 *configure.win
 d21fc0057709eb458f0da82626ebb05c *inst/WORDLIST
 f05c5080322c3e5e6ddbc6a8fb91d334 *inst/doc/report.R
 25208e256f56a8b32d31e1eb5c0a5acf *inst/doc/report.Rmd
-9b819953c1da8760831124e7561420e3 *inst/doc/report.html
-2190b629980e080d04e4c0d8d7b0d089 *man/winch-package.Rd
+adf489b6e565ed4f631848db8583cc1b *inst/doc/report.html
+776989bd2ef9dac6875bebef0ac7b8b4 *man/winch-package.Rd
 b24708042d4c5ac546975689b4bbd013 *man/winch_add_trace_back.Rd
 d2c64405a55a0548c7b239e621d6d713 *man/winch_available.Rd
 0651f71bc88e9366af3980b493107ce7 *man/winch_call.Rd
@@ -118,7 +118,7 @@ b4aa1f84b07a13c2e2d3d4b171be6acd *tests/example7.R
 49f25b5d7edd79b112d7ccc42bcfa028 *tests/example8.R
 c42156ebc050ced75e7d99177f4dd409 *tests/testthat.R
 e9eb059fce129222c307234c112b2330 *tests/testthat/_snaps/add_trace_back.md
-5e9b9043c12f4837d90595dcf02b1dd6 *tests/testthat/test-add_trace_back.R
+da9d3e85bd39c8c78e873419713e00ff *tests/testthat/test-add_trace_back.R
 a6cdc562dce21b2f746386801bd224f1 *tests/testthat/test-stop.R
 5ccf937062cfd266e92bc590a7734a23 *tests/testthat/test-trace_back.R
 25208e256f56a8b32d31e1eb5c0a5acf *vignettes/report.Rmd
