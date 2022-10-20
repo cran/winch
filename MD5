@@ -1,6 +1,6 @@
-db730f367c508d233667ba9d57842082 *DESCRIPTION
+a2655ba25b366d92369527c925d1fd31 *DESCRIPTION
 348546d081868c82ae6d90537c2cda04 *NAMESPACE
-cc1f17f1871c4ff32bbc0c6366b74698 *NEWS.md
+ac49ba6961e2dd52645e81591b07ab46 *NEWS.md
 080a7617a51060110abe695502685457 *R/add_trace_back.R
 c30a30877ed4cb0c86f3bcf1328023c7 *R/available.R
 221863d03b48a3b43c29204c880c4e56 *R/call.R
@@ -15,8 +15,8 @@ c3a19806730d1f6043dca1cfdc058de3 *R/zzz.R
 5fd67e5b578b6b59041922f694acbb48 *configure.win
 d21fc0057709eb458f0da82626ebb05c *inst/WORDLIST
 f05c5080322c3e5e6ddbc6a8fb91d334 *inst/doc/report.R
-25208e256f56a8b32d31e1eb5c0a5acf *inst/doc/report.Rmd
-adf489b6e565ed4f631848db8583cc1b *inst/doc/report.html
+59f3dc366f61eedff9ab91584487bfe6 *inst/doc/report.Rmd
+f0ba357dec1bde72006a82fa360e01a1 *inst/doc/report.html
 776989bd2ef9dac6875bebef0ac7b8b4 *man/winch-package.Rd
 b24708042d4c5ac546975689b4bbd013 *man/winch_add_trace_back.Rd
 d2c64405a55a0548c7b239e621d6d713 *man/winch_available.Rd
@@ -31,11 +31,11 @@ da405a17e181e80555e1dc00b858fb79 *src/Makevars.in
 cb48213956397cf16ca2fed3a8e3b7f9 *src/call.c
 96d24c1ea13797a885fefb1eb7c5f8dd *src/configure.sh
 f853636cf2e30b44979edae3f3d892e4 *src/configure.win.sh
-5cc7ca1cd862a3f1a41275620d2bcf9e *src/init.c
+ff66c7d76f0e709c5d635251c4371f38 *src/init.c
 641838154e00c71021b4591321873bc6 *src/stop.c
-aaac73a9edbc26842c7f2bbcd9156dbb *src/trace_back.c
-da39f06cacdf24f2258206a257520854 *src/trace_back_backtrace.c
-82f9efe329a0232bcf0aec2f8b0d6480 *src/trace_back_unwind.c
+9d6a6051141d146dd30c22b3dd889800 *src/trace_back.c
+5ddc9910d5278edb26c646799f878aa3 *src/trace_back_backtrace.c
+47db345012cb223db9259e22fe906f6b *src/trace_back_unwind.c
 24b5b3feec63c4be0975e1fea5100440 *src/vendor/libbacktrace/LICENSE
 3c8fbdfa023dc38ef19aacf496cb51c1 *src/vendor/libbacktrace/Makefile.am
 314c9404bcfe4123bf54cd7aa3b83658 *src/vendor/libbacktrace/Makefile.in
@@ -121,4 +121,4 @@ e9eb059fce129222c307234c112b2330 *tests/testthat/_snaps/add_trace_back.md
 da9d3e85bd39c8c78e873419713e00ff *tests/testthat/test-add_trace_back.R
 a6cdc562dce21b2f746386801bd224f1 *tests/testthat/test-stop.R
 5ccf937062cfd266e92bc590a7734a23 *tests/testthat/test-trace_back.R
-25208e256f56a8b32d31e1eb5c0a5acf *vignettes/report.Rmd
+59f3dc366f61eedff9ab91584487bfe6 *vignettes/report.Rmd
