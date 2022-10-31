@@ -1,5 +1,12 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
+# winch 0.0.11 (2022-10-31)
+
+## Bug fixes
+
+- Fix prototype warning (@Antonov548, #60).
+
+
 # winch 0.0.10 (2022-10-20)
 
 ## Bug fixes

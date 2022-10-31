@@ -1,7 +1,7 @@
 Package: winch
 Title: Portable Native and Joint Stack Traces
-Version: 0.0.10
-Date: 2022-10-20
+Version: 0.0.11
+Date: 2022-10-31
 Authors@R: 
     c(person(given = "Kirill",
              family = "Müller",
@@ -31,11 +31,11 @@ Biarch: yes
 RoxygenNote: 7.2.1
 Config/testthat/edition: 3
 NeedsCompilation: yes
-Packaged: 2022-10-20 01:28:12 UTC; kirill
+Packaged: 2022-10-31 06:32:53 UTC; kirill
 Author: Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>),
   R Consortium [fnd],
   Ian Lance Taylor [aut] (Bundled libbacktrace library),
   Free Software Foundation [cph] (Bundled libbacktrace library)
 Maintainer: Kirill Müller <kirill@cynkra.com>
 Repository: CRAN
-Date/Publication: 2022-10-20 02:30:02 UTC
+Date/Publication: 2022-10-31 07:50:02 UTC

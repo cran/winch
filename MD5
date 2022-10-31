@@ -1,6 +1,6 @@
-a2655ba25b366d92369527c925d1fd31 *DESCRIPTION
+d98ea3c5d8876d9c32659ebecb6864f7 *DESCRIPTION
 348546d081868c82ae6d90537c2cda04 *NAMESPACE
-ac49ba6961e2dd52645e81591b07ab46 *NEWS.md
+af32b4ef967f11d9758d12852d866eba *NEWS.md
 080a7617a51060110abe695502685457 *R/add_trace_back.R
 c30a30877ed4cb0c86f3bcf1328023c7 *R/available.R
 221863d03b48a3b43c29204c880c4e56 *R/call.R
@@ -16,7 +16,7 @@ c3a19806730d1f6043dca1cfdc058de3 *R/zzz.R
 d21fc0057709eb458f0da82626ebb05c *inst/WORDLIST
 f05c5080322c3e5e6ddbc6a8fb91d334 *inst/doc/report.R
 59f3dc366f61eedff9ab91584487bfe6 *inst/doc/report.Rmd
-f0ba357dec1bde72006a82fa360e01a1 *inst/doc/report.html
+82b931aeef148311d9a73fef49b95087 *inst/doc/report.html
 776989bd2ef9dac6875bebef0ac7b8b4 *man/winch-package.Rd
 b24708042d4c5ac546975689b4bbd013 *man/winch_add_trace_back.Rd
 d2c64405a55a0548c7b239e621d6d713 *man/winch_available.Rd
@@ -35,7 +35,7 @@ ff66c7d76f0e709c5d635251c4371f38 *src/init.c
 641838154e00c71021b4591321873bc6 *src/stop.c
 9d6a6051141d146dd30c22b3dd889800 *src/trace_back.c
 5ddc9910d5278edb26c646799f878aa3 *src/trace_back_backtrace.c
-47db345012cb223db9259e22fe906f6b *src/trace_back_unwind.c
+3bba908930c19998827382a4b2ceb9ac *src/trace_back_unwind.c
 24b5b3feec63c4be0975e1fea5100440 *src/vendor/libbacktrace/LICENSE
 3c8fbdfa023dc38ef19aacf496cb51c1 *src/vendor/libbacktrace/Makefile.am
 314c9404bcfe4123bf54cd7aa3b83658 *src/vendor/libbacktrace/Makefile.in
