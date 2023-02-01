@@ -1,6 +1,6 @@
-d98ea3c5d8876d9c32659ebecb6864f7 *DESCRIPTION
+1ac933ce06c2b6fd7661420ae3308659 *DESCRIPTION
 348546d081868c82ae6d90537c2cda04 *NAMESPACE
-af32b4ef967f11d9758d12852d866eba *NEWS.md
+657ccf39d900f435aa1dc48c072def12 *NEWS.md
 080a7617a51060110abe695502685457 *R/add_trace_back.R
 c30a30877ed4cb0c86f3bcf1328023c7 *R/available.R
 221863d03b48a3b43c29204c880c4e56 *R/call.R
@@ -9,14 +9,14 @@ b035d17bbb84a75f80c349eadc49682f *R/stop.R
 429df98d5378804ed12419522ce35af5 *R/trace_back.R
 97bce06a52b9fa2f3978e52be90ad5f4 *R/winch-package.R
 c3a19806730d1f6043dca1cfdc058de3 *R/zzz.R
-919847d978f2cfcf00cd0414f81423cd *README.md
-46294b1103216643fb84afde1d31d8bd *build/vignette.rds
+141affd31ce11950a5f25b5158123216 *README.md
+4809269990e119c2dee25ca8a7f8022e *build/vignette.rds
 584ed37202455357d0d2b2e8fabdfc6e *configure
 5fd67e5b578b6b59041922f694acbb48 *configure.win
 d21fc0057709eb458f0da82626ebb05c *inst/WORDLIST
 f05c5080322c3e5e6ddbc6a8fb91d334 *inst/doc/report.R
 59f3dc366f61eedff9ab91584487bfe6 *inst/doc/report.Rmd
-82b931aeef148311d9a73fef49b95087 *inst/doc/report.html
+e9b392538d05fd3507f388a0fb70f637 *inst/doc/report.html
 776989bd2ef9dac6875bebef0ac7b8b4 *man/winch-package.Rd
 b24708042d4c5ac546975689b4bbd013 *man/winch_add_trace_back.Rd
 d2c64405a55a0548c7b239e621d6d713 *man/winch_available.Rd
@@ -34,8 +34,8 @@ f853636cf2e30b44979edae3f3d892e4 *src/configure.win.sh
 ff66c7d76f0e709c5d635251c4371f38 *src/init.c
 641838154e00c71021b4591321873bc6 *src/stop.c
 9d6a6051141d146dd30c22b3dd889800 *src/trace_back.c
-5ddc9910d5278edb26c646799f878aa3 *src/trace_back_backtrace.c
-3bba908930c19998827382a4b2ceb9ac *src/trace_back_unwind.c
+88711e7f444ac8ec1ba7070c12d763ea *src/trace_back_backtrace.c
+ea7f2012afafe98bd9f4fb1c45ac3454 *src/trace_back_unwind.c
 24b5b3feec63c4be0975e1fea5100440 *src/vendor/libbacktrace/LICENSE
 3c8fbdfa023dc38ef19aacf496cb51c1 *src/vendor/libbacktrace/Makefile.am
 314c9404bcfe4123bf54cd7aa3b83658 *src/vendor/libbacktrace/Makefile.in
@@ -90,7 +90,7 @@ d747c2d0d4249dc23a798fa2d145961a *src/vendor/libbacktrace/macho.c
 cca06f5a86a6c31473a8167fb285ae1a *src/vendor/libbacktrace/mmapio.c
 21b967372b521f607c0a119f425931ec *src/vendor/libbacktrace/move-if-change
 af7947a33fd7c4c164725f5b2dd6a5be *src/vendor/libbacktrace/nounwind.c
-caf01dc48e141d05c2d6162fe055d602 *src/vendor/libbacktrace/pecoff.c
+cfefa65e1bc8baa53a993a27b6c0bc8f *src/vendor/libbacktrace/pecoff.c
 8ddc44f67d17a0705dbd2db97e529341 *src/vendor/libbacktrace/posix.c
 48719eb435d58acea87068d174f065ff *src/vendor/libbacktrace/print.c
 7b3a426ea8565157c97e292ef45d7819 *src/vendor/libbacktrace/read.c
