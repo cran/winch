@@ -1,24 +1,19 @@
 #' Enrich an rlang traceback with details on native calls
 #'
-#' This function uses the native stack trace returned from [winch_trace_back()]
-#' to add details on native function calls to an rlang traceback object.
-#' It is intended to be called by rlang.
+#' @description
+#'
+#' `r lifecycle::badge('deprecated')`
+#'
+#' This function should be reimplemented in rlang, to avoid a soft dependency between
+#' rlang's traceback format and this package.
 #'
 #' @param trace An rlang traceback as returned by [rlang::trace_back()].
 #'
 #' @export
-#' @examplesIf requireNamespace("rlang", quietly = TRUE)
-#' foo <- function() {
-#'   winch_call(bar)
-#' }
-#'
-#' bar <- function() {
-#'   trace <- rlang::trace_back()
-#'   winch_add_trace_back(trace)
-#' }
-#'
-#' foo()
+#' @keywords internal
 winch_add_trace_back <- function(trace = rlang::trace_back(bottom = parent.frame())) {
+  lifecycle::deprecate_soft("0.1.0", "winch::winch_add_trace_back()")
+
   if (!winch_available()) {
     return(trace)
   }
@@ -36,7 +31,7 @@ winch_add_trace_back <- function(trace = rlang::trace_back(bottom = parent.frame
   # FIXME: This is artificial, remove when done
   #native_trace <- rep(native_trace, each = 3)
 
-  is_libr <- procmaps::path_is_libr(native_trace$pathname)
+  is_libr <- native_trace$is_libr
   is_libr_idx <- which(is_libr)
 
   if (length(is_libr_idx) == 0) {
