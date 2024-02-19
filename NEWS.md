@@ -1,5 +1,12 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# winch 0.1.1 (2024-02-19)
+
+## Bug fixes
+
+- Gracefully degrade if `unw_get_proc_name()` results in an error.
+
+
 # winch 0.1.0 (2023-04-19)
 
 ## Features
