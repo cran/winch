@@ -1,5 +1,12 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# winch 0.1.2 (2025-04-30)
+
+## Chore
+
+- Avoid calling `abort()` (#91).
+
+
 # winch 0.1.1 (2024-02-19)
 
 ## Bug fixes
