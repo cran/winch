@@ -1,5 +1,38 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# winch 0.1.3 (2026-02-14)
+
+## Chore
+
+- Auto-update from GitHub Actions (#96).
+
+## Continuous integration
+
+- Remove plogr usage.
+
+- Fix comment (#107).
+
+- Tweaks (#106).
+
+- Test all R versions on branches that start with cran- (#105).
+
+- Install binaries from r-universe for dev workflow (#103).
+
+- Fix reviewdog and add commenting workflow (#101).
+
+- Use workflows for fledge (#99).
+
+- Sync (#98).
+
+- Use reviewdog for external PRs (#97).
+
+- Cleanup and fix.
+
+- Format with air, check detritus, better handling of `extra-packages` (#95).
+
+- Enhance permissions for workflow (#94).
+
+
 # winch 0.1.2 (2025-04-30)
 
 ## Chore

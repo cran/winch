@@ -1,6 +1,6 @@
-ab848b36373dae108582c6267459af6c *DESCRIPTION
+ad03f431baa75ab875c21c3e6ee3c7da *DESCRIPTION
 7e427f10c465fdbf3b85a85f50656309 *NAMESPACE
-9e79f17331284ba507240ad5b2a2698f *NEWS.md
+fc62416a7f06be67360633e594b59e31 *NEWS.md
 f2a2d7bcfdbc6f8467b65b0f92ff25c9 *R/add_trace_back.R
 c30a30877ed4cb0c86f3bcf1328023c7 *R/available.R
 221863d03b48a3b43c29204c880c4e56 *R/call.R
@@ -10,13 +10,13 @@ b1cc7112dd244e604b2cf5130d091aa0 *R/trace_back.R
 b82ccf9419db743d787ab9b63aab8ab4 *R/winch-package.R
 c3a19806730d1f6043dca1cfdc058de3 *R/zzz.R
 141affd31ce11950a5f25b5158123216 *README.md
-c4b29eb53979004cd73a1da32bb2c912 *build/vignette.rds
+74c51679d3a050c7461cf5ee18c0b109 *build/vignette.rds
 584ed37202455357d0d2b2e8fabdfc6e *configure
 5fd67e5b578b6b59041922f694acbb48 *configure.win
 d21fc0057709eb458f0da82626ebb05c *inst/WORDLIST
 b165ea76ee6be4a532e7f6266171c9d1 *inst/doc/report.R
 59f3dc366f61eedff9ab91584487bfe6 *inst/doc/report.Rmd
-274cc33c3c652a094d4c81b3e9170c12 *inst/doc/report.html
+134ef975e7c1f24c0a1e74172408cd85 *inst/doc/report.html
 cb1e46f469cfbbbde29c8b5113e1d789 *man/figures/lifecycle-archived.svg
 c0d2e5a54f1fa4ff02bf9533079dd1f7 *man/figures/lifecycle-defunct.svg
 a1b8c987c676c16af790f563f96cbb1f *man/figures/lifecycle-deprecated.svg
@@ -121,7 +121,7 @@ b236dcdae0f43e60faf5288c71ff0b9a *tests/example0.R
 c52263aacc679eb6a449b2b3637e7f09 *tests/example3.R
 b508bb00dd53d57b5830707e5fb99daa *tests/example4.R
 a8b23b571c214fa0c09b3304abd6a5c2 *tests/example5.R
-f4312772f3b4c92f0516dcef64f20a97 *tests/example6.R
+bcc8cd7028c3537110b017a6532543af *tests/example6.R
 b4aa1f84b07a13c2e2d3d4b171be6acd *tests/example7.R
 49f25b5d7edd79b112d7ccc42bcfa028 *tests/example8.R
 c42156ebc050ced75e7d99177f4dd409 *tests/testthat.R
